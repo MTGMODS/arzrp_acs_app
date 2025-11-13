@@ -1,7 +1,14 @@
 package com.arzrp.acs;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebChromeClient;
@@ -16,6 +23,30 @@ import androidx.core.view.WindowInsetsCompat;
 public class MainActivity extends AppCompatActivity {
 
     private WebView webview1;
+
+    public static boolean isActiveAdBlocker(Activity activity, Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            Network activeNetwork = cm.getActiveNetwork();
+            if (activeNetwork != null) {
+                LinkProperties linkProperties = cm.getLinkProperties(activeNetwork);
+                if (linkProperties != null) {
+                    String privateDnsHost = linkProperties.getPrivateDnsServerName();
+                    if (privateDnsHost != null) {
+                        String dns = privateDnsHost.toLowerCase();
+                        String[] adBlockers = new String[]{"adguard", "nextdns", "controld", "libredns", "blokada", "quad9", "adblock", "rethinkdns", "cleanbrowsing"};
+                        for (String blocker : adBlockers) {
+                            if (dns.contains(blocker)) {
+                                Log.w("MtgTools", "Detected AD blocker: " + privateDnsHost);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
     private void setupWebView(WebView webView) {
