@@ -102,6 +102,8 @@ public class MainActivity extends AppCompatActivity {
 
         webview1.loadUrl("https://pla1keo.github.io/mobile/");
 
+        // backup link https://mtgmods.github.io/pla1keo.github.io/
+
         if (isActiveAdBlocker(this)) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle("ℹ️ Обнаружен AD Blocker (Private DNS) ℹ️")
