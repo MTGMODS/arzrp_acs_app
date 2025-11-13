@@ -3,28 +3,34 @@ package com.arzrp.acs;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 public class MainActivity extends AppCompatActivity {
 
     private WebView webview1;
 
-    public static boolean isActiveAdBlocker(Activity activity, Context context) {
+    private static boolean isActiveAdBlocker(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             Network activeNetwork = cm.getActiveNetwork();
@@ -63,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
         settings.setLoadsImagesAutomatically(true);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
 
@@ -95,9 +102,40 @@ public class MainActivity extends AppCompatActivity {
 
         webview1.loadUrl("https://pla1keo.github.io/mobile/");
 
-        new Ads(MainActivity.this);
+        if (isActiveAdBlocker(this)) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("ℹ️ Обнаружен AD Blocker (Private DNS) ℹ️")
+                    .setMessage(
+                            "Данное приложение распространяется бесплатно, а реклама при запуске помогает поддерживать его 💖\n\n"
+                                    + "Вы же используете Private DNS, который блокирует показ рекламы 🥺\n\n"
+                                    + "👉 Отключите DNS в настройках сети\n"
+                    )
+                    .setPositiveButton("Открыть настройки", (dialog, which) -> {
+                        try {
+                            Intent intent = new Intent("android.settings.PRIVATE_DNS_SETTINGS");
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            this.startActivity(intent);
+                        } catch (Exception e) {
+                            try {
+                                Intent intent = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                MainActivity.this.startActivity(intent);
+                            } catch (Exception ex) {
+                                Toast.makeText(this, "Настройки -> Сеть -> DNS", Toast.LENGTH_LONG).show();
+                            }
+                        }
+                        dialog.dismiss();
+                    })
+                    .setNegativeButton("Нет", (dialog, which) -> {
+                        Toast.makeText(this, "😭😭😭", Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                    })
+                    .setCancelable(true)
+                    .show();
+        } else {
+            new Ads(MainActivity.this);
+        }
 
     }
-
 
 }
