@@ -22,13 +22,28 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class MainActivity extends AppCompatActivity {
 
-    private WebView webview1;
+    private void enableFullscreen() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        View decorView = getWindow().getDecorView();
+        WindowInsetsControllerCompat controller =
+                ViewCompat.getWindowInsetsController(decorView);
+
+        if (controller != null) {
+            controller.hide(WindowInsetsCompat.Type.systemBars());
+            controller.setSystemBarsBehavior(
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            );
+        }
+    }
 
     private static boolean isActiveAdBlocker(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -53,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+
+    private WebView webview1;
 
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
     private void setupWebView(WebView webView) {
@@ -89,20 +106,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+        enableFullscreen();
 
         webview1 = (WebView) findViewById(R.id.webview1);
         setupWebView(webview1);
 
-        webview1.loadUrl("https://pla1keo.github.io/mobile/");
-
-        // backup link https://mtgmods.github.io/pla1keo.github.io/
+        webview1.loadUrl("https://pla1keo.github.io/mobile/"); // backup https://mtgmods.github.io/pla1keo.github.io/
 
         if (isActiveAdBlocker(this)) {
             new MaterialAlertDialogBuilder(this)
@@ -138,6 +149,12 @@ public class MainActivity extends AppCompatActivity {
             new Ads(MainActivity.this);
         }
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        enableFullscreen();
     }
 
 }
